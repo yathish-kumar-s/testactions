@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Configure Git
@@ -18,10 +18,37 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
+      - name: Fetch All Branches
+        run: git fetch --all
+
       - name: Push to QA
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git fetch origin qa || git branch qa
+          git fetch --all
           git checkout qa
-          git merge dev --no-edit --strategy-option theirs || (echo "Merge conflict detected. Resolving with 'theirs' strategy." && git checkout --theirs . && git add . && git commit -m "Resolved merge conflict" && git push origin qa)
-          git push origin qa
+          git pull origin qa
+          git merge origin/dev --no-edit --strategy-option theirs || (
+            echo "Merge conflict detected. Resolving with 'theirs' strategy." &&
+            git checkout --theirs . &&
+            git add . &&
+            git commit -m "Resolved merge conflict"
+          )
+          
+          # Push only if there are changes
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Changes detected. Pushing to QA branch."
+            git push origin qa
+          else
+            echo "No changes to push. Exiting."
+          fi
+
+      - name: Debug Branch State
+        run: |
+          echo "Current branch:"
+          git branch
+          echo "Status of QA branch:"
+          git status
+          echo "Latest commits on dev:"
+          git log origin/dev --oneline -5
+          echo "Latest commits on qa:"
+          git log origin/qa --oneline -5
