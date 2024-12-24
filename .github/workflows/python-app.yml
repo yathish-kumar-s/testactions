@@ -21,25 +21,36 @@ jobs:
       - name: Fetch All Branches
         run: git fetch --all
 
-      - name: Push to QA
+      - name: Ensure QA Branch Exists
         run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git fetch --all
-          git checkout qa
-          git pull origin qa
+          if git ls-remote --exit-code --heads origin qa; then
+            echo "QA branch exists. Checking out."
+            git checkout qa
+            git pull origin qa
+          else
+            echo "QA branch does not exist. Creating it."
+            git checkout -b qa
+            git push origin qa
+          fi
+
+      - name: Merge dev into qa
+        run: |
+          echo "Merging dev into qa..."
           git merge origin/dev --no-edit --strategy-option theirs || (
             echo "Merge conflict detected. Resolving with 'theirs' strategy." &&
             git checkout --theirs . &&
             git add . &&
             git commit -m "Resolved merge conflict"
           )
-          
+
+      - name: Push Changes to QA
+        run: |
           # Push only if there are changes
           if [ -n "$(git status --porcelain)" ]; then
             echo "Changes detected. Pushing to QA branch."
             git push origin qa
           else
-            echo "No changes to push. Exiting."
+            echo "No changes to push. QA branch is already up to date."
           fi
 
       - name: Debug Branch State
