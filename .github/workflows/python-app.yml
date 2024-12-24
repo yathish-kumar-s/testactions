@@ -21,7 +21,6 @@ jobs:
       - name: Push to QA
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git fetch origin qa
+          git fetch origin qa || git branch qa
           git checkout qa
-          git merge dev --no-edit --allow-unrelated-histories
-          git push origin qa
+          git merge dev --no-edit --strategy-option theirs || (echo "Merge conflict detected. Resolving with 'theirs' strategy." && git checkout --theirs . && git add . && git commit -m "Resolved merge conflict" && git push origin qa)
