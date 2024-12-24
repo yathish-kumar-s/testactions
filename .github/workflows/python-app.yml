@@ -25,7 +25,7 @@ jobs:
         run: git checkout qa
 
       - name: Merge changes from dev to qa
-        run: git merge origin/dev --no-edit
+        run: git merge origin/dev --allow-unrelated-histories --no-edit
 
       - name: Push changes to QA branch
         run: git push origin qa
