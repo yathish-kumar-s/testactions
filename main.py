@@ -6,11 +6,11 @@
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, hello12')  # Press Ctrl+F8 to toggle the breakpoint.
+    print(f'Hi, hello123')  # Press Ctrl+F8 to toggle the breakpoint.
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    print_hi('PyCharm1')
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
