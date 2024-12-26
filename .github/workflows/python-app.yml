@@ -1,27 +1,43 @@
-name: Push to QA
+name: Sync Dev to QA
 
 on:
+  # Trigger the workflow on push events to the 'dev' branch
   push:
     branches:
       - dev
 
 jobs:
-  push-to-qa:
-    runs-on: ubuntu-latest
+  sync-dev-to-qa:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for the job
 
     steps:
-      - name: Checkout code
+      # Step 1: Checkout the repository to access the code
+      - name: Checkout the repository
         uses: actions/checkout@v3
 
-      - name: Configure Git
+      # Step 2: Set up Git configuration for committing changes
+      - name: Set up Git
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"  # Set the Git user name for commits
+          git config user.email "actions@github.com"  # Set the Git user email for commits
 
-      - name: Push to QA
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git fetch origin qa
-          git checkout qa
-          git merge dev --no-edit
-          git push origin qa
+      # Step 3: Fetch all branches to ensure the latest changes are available
+      - name: Fetch dev and qa
+        run: git fetch origin dev qa
+
+      # Step 4: Checkout the 'qa' branch to prepare for the merge
+      - name: Checkout QA branch
+        run: git checkout qa
+
+      # Step 5: Merge changes from 'dev' branch to 'qa' branch, allowing unrelated histories
+      - name: Merge changes from dev to qa (allow unrelated histories)
+        run: git merge origin/dev --allow-unrelated-histories -X theirs --no-edit
+        # '--allow-unrelated-histories' is used when the branches have no common history
+        # '-X theirs' automatically resolves conflicts in favor of the 'dev' branch
+        # '--no-edit' prevents opening an editor for the merge commit message
+
+      # Step 6: Push the merged changes to the 'qa' branch on the remote repository
+      - name: Push changes to QA branch
+        run: git push origin qa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token to authenticate the push
